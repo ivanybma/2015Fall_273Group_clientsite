@@ -19,6 +19,7 @@ public class register_process {
 		MongoClient mongoClient = new MongoClient( "localhost" , 27017 );
 
 		MongoDatabase database = mongoClient.getDatabase("device_a");
+		
 		MongoCollection<Document> collection = database.getCollection("current_resources");
 		
 		Document doc = collection.find().projection(fields).first();

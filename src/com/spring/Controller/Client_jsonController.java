@@ -68,6 +68,7 @@ public class Client_jsonController {
 	private String uri,urial,uriat,urider,uriupd, endpoint_client_name_txt;
 	private register_process rgpro = new register_process();
 	private update_lwm2mRunnable update_job = new update_lwm2mRunnable();
+	Thread update_thread = new Thread(update_job,"update_job");
 	private ArrayList<ResourceCommand> rsc_cmds = new ArrayList<ResourceCommand>();
 	private ArrayList<ReportEntity> rpt_pnds = new ArrayList<ReportEntity>();
 	private Map<String,String> att_lst_rpt_time = new HashMap<String,String> ();
@@ -76,6 +77,7 @@ public class Client_jsonController {
     @RequestMapping(value = "/")    //show up the device main panel
     public String genNewDevice(Model model)
     {
+    
         return "device_panel";
     }
 	
@@ -111,8 +113,10 @@ public class Client_jsonController {
 				Document obj_ist_obj = (Document) obj_ist_doc.get(obj_ist);
 				Iterator<String> rsc_id_itor = obj_ist_obj.keySet().iterator();
 					while(rsc_id_itor.hasNext())	//loop the resource id level
-					{
+					{	
 						String rsc_id = rsc_id_itor.next().toString();
+						if(rsc_id.equals("11"))
+							continue;
 						rl = new ResourceLayout();
 						rl.setObjid(obj_id_doc);
 						rl.setObjiddes(ObjRscDesMap.descHelper.get(obj_id_doc));
@@ -391,6 +395,68 @@ public class Client_jsonController {
 		return objid+"/" + objist +"/" + rscid +" = " + rscval + " is ready";
     	
     }
+    
+    
+    @RequestMapping(value="/updategroup",method= RequestMethod.POST)
+    @ResponseBody
+    public String write_by_srcid(@RequestBody String gpdtl,HttpServletRequest request){
+		
+    	System.out.println("u r in client server: "+gpdtl);
+   		mongoChange mongoopr = new mongoChange();
+   		Document myDoc = Document.parse(gpdtl);
+   		String srcpath = "object_list.4.0.11";
+		mongoopr.groupupdate(srcpath,myDoc);
+
+		return "group update is done";
+    	
+    }
+    
+    
+	
+	@RequestMapping(value="/sendmsg/{newmsg}",method= RequestMethod.GET)
+	@ResponseBody
+	public String changeactivegp(@PathVariable("newmsg") String newmsg){
+		
+		System.out.println("msg is now in client server");
+		RestTemplate restTemplate;
+		Document obj_src_d = (Document) btpro.find(new BasicDBObject().append("_id", 0)).get("object_list");
+		Document obj_id_ist = (Document) obj_src_d.get("0");
+		Document security_d = (Document) obj_id_ist.get("0");
+		String epn = btpro.find(new BasicDBObject().append("_id", 0)).get("endpoint_client_name").toString();
+		
+		
+		String datetime = (new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime())).toString();
+		String reg_uri = security_d.get("0").toString()+"/newmsg/"+epn+"/"+newmsg+"/"+datetime;
+		
+		restTemplate = new RestTemplate();		
+		System.out.println(reg_uri);
+		String output = restTemplate.getForObject(reg_uri, String.class);
+
+		return output;
+	}
+	
+    
+    
+	
+	@RequestMapping(value="/rtvgpmsg",method= RequestMethod.GET)
+	@ResponseBody
+	public String rtvgpmsg(){
+		
+		RestTemplate restTemplate;
+		Document obj_src_d = (Document) btpro.find(new BasicDBObject().append("_id", 0)).get("object_list");
+		Document obj_id_ist = (Document) obj_src_d.get("0");
+		Document security_d = (Document) obj_id_ist.get("0");
+		String epn = btpro.find(new BasicDBObject().append("_id", 0)).get("endpoint_client_name").toString();
+		
+		String reg_uri = security_d.get("0").toString()+"/rtvgpmsg/"+epn;
+		
+		restTemplate = new RestTemplate();		
+		System.out.println(reg_uri);
+		String output = restTemplate.getForObject(reg_uri, String.class);
+
+		return output;
+	}
+	
     
     @RequestMapping(value="/writeattr/{objid}/{rscid}/{att}/{attv}",method= RequestMethod.GET)
     @ResponseBody
@@ -710,8 +776,10 @@ public class Client_jsonController {
 		restTemplate.postForObject( reg_uri, full_rsc, RegisterRsp.class);
 //-------------------kick off update
 		
-		Thread update_thread = new Thread(update_job,"update_job");
+		//Thread update_thread = new Thread(update_job,"update_job");
+		if(!update_thread.isAlive())
 		update_thread.start();
+		
 
 		
 		return "ok";
@@ -721,6 +789,8 @@ public class Client_jsonController {
 	@ResponseBody
 	public String deregister(@RequestParam(value="endpoint_client_name", defaultValue="default")String endpoint_client_name){
     	update_job.stopupdate();
+    	
+    	
 
 		BasicDBObject fields = new BasicDBObject().append("_id", 0);	
 		Document rtv = btpro.find(fields);
@@ -816,7 +886,8 @@ public class Client_jsonController {
 	public String activate(){
 		
 		refreshatt_cotrol();
-		Thread update_thread = new Thread(update_job,"update_job");
+		//Thread update_thread = new Thread(update_job,"update_job");
+		if(!update_thread.isAlive())
 		update_thread.start();
 		return "active done";
 	}
@@ -988,6 +1059,12 @@ public class Client_jsonController {
 	    			
 	     		}
 	    		
+	// group msg update request   Start		
+	    		
+	    		
+	    		
+	    		
+	// group msg update request   End
           }
         }
 

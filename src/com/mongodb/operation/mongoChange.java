@@ -20,6 +20,7 @@ public class mongoChange {
 		MongoClient mongoClient = new MongoClient( "localhost" , 27017 );
 
 		MongoDatabase database = mongoClient.getDatabase("device_a");
+	
 		MongoCollection<Document> rsc_collection = database.getCollection("current_resources");
 		
 		BasicDBObject fields = new BasicDBObject().append("_id", 0);	
@@ -43,6 +44,7 @@ public class mongoChange {
 		MongoClient mongoClient = new MongoClient( "localhost" , 27017 );
 
 		MongoDatabase database = mongoClient.getDatabase("device_a");
+		
 		MongoCollection<Document> rsc_collection = database.getCollection("current_resources");
 		
 		
@@ -60,6 +62,22 @@ public class mongoChange {
 		
 		mongoClient.close();
 		
+	}
+	
+	
+	public void groupupdate(String srcpath, Document srcval){
+		MongoClient mongoClient = new MongoClient( "localhost" , 27017 );
+
+		MongoDatabase database = mongoClient.getDatabase("device_a");
+		
+		MongoCollection<Document> rsc_collection = database.getCollection("current_resources");
+		
+		BasicDBObject fields = new BasicDBObject().append("_id", 0);	
+		Document doc = rsc_collection.find().projection(fields).first();
+		
+		rsc_collection.updateOne(new Document("endpoint_client_name",doc.get("endpoint_client_name").toString()), 
+				new Document("$set", new Document(srcpath,srcval)));
+		mongoClient.close();
 	}
 	
 	

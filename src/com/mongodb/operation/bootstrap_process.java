@@ -28,6 +28,7 @@ public class bootstrap_process {
 			MongoClient mongoClient = new MongoClient( "localhost" , 27017 );
 
 			MongoDatabase database = mongoClient.getDatabase("device_a");
+			//MongoDatabase database = mongoClient.getDatabase("device_b");
 			MongoCollection<Document> rsc_collection = database.getCollection("current_resources");
 			//Document doc = reg_collection.find().projection(fields).first();
 			Document doc = rsc_collection.find().projection(fields).first();
@@ -41,6 +42,7 @@ public class bootstrap_process {
 			MongoClient mongoClient = new MongoClient( "localhost" , 27017 );
 
 			MongoDatabase database = mongoClient.getDatabase("device_a");
+			//MongoDatabase database = mongoClient.getDatabase("device_b");
 			MongoCollection<Document> rsc_collection = database.getCollection("current_resources");
 			
 			ObjectMapper mapper = new ObjectMapper();
